@@ -31,3 +31,14 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Local credentials, builds, and service data
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+/bin/
+/data/
+*.log
