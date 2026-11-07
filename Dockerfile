@@ -2,7 +2,8 @@ FROM golang:1.27.1-alpine AS build
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
-COPY *.go ./
+COPY main.go ./
+COPY internal/ ./internal/
 RUN CGO_ENABLED=0 go build -trimpath -o /weather-app .
 
 FROM alpine:3.22

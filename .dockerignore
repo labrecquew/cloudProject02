@@ -8,3 +8,5 @@ id_rsa*
 id_ed25519*
 README.md
 REPORT.md
+bin/
+data/
