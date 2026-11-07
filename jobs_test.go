@@ -36,11 +36,11 @@ func TestConcurrentHTTPRequestsStayIsolated(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	entered := make(chan ForecastRequest, 4)
 	release := make(chan struct{})
-	service := newJobService(ctx, providerFunc(func(ctx context.Context, input ForecastRequest) (Forecast, error) {
+	service := newTestJobService(ctx, providerFunc(func(ctx context.Context, input ForecastRequest) (Forecast, error) {
 		entered <- input
 		select {
 		case <-release:
-			return Forecast{ZIP: input.ZIP, Days: input.Days}, nil
+			return testForecast(input), nil
 		case <-ctx.Done():
 			return Forecast{}, ctx.Err()
 		}
@@ -152,7 +152,7 @@ func TestQueueCapacityAndExpiry(t *testing.T) {
 
 func TestProviderTimeoutBecomesFailedJob(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	service := newJobService(ctx, providerFunc(func(ctx context.Context, _ ForecastRequest) (Forecast, error) {
+	service := newTestJobService(ctx, providerFunc(func(ctx context.Context, _ ForecastRequest) (Forecast, error) {
 		<-ctx.Done()
 		return Forecast{}, ctx.Err()
 	}), 1, 1)
@@ -165,4 +165,22 @@ func TestProviderTimeoutBecomesFailedJob(t *testing.T) {
 	if result := waitJob(t, service, job.ID); result.Status != "failed" || result.Error == "" {
 		t.Fatalf("timeout result: %+v", result)
 	}
+}
+
+// Unit tests substitute only the transport; completion still runs the evaluator.
+type publisherFunc func(context.Context, forecastEvent) error
+
+func (f publisherFunc) Publish(ctx context.Context, event forecastEvent) error { return f(ctx, event) }
+func testForecast(input ForecastRequest) Forecast {
+	now := time.Now().UTC()
+	return Forecast{ZIP: input.ZIP, Days: input.Days, WindowStart: now, WindowEnd: now.Add(time.Duration(input.Days) * 24 * time.Hour),
+		Points: []ForecastPoint{{Time: now.Add(time.Hour), TemperatureCelsius: 20, WindMetersPerSec: 5}}}
+}
+func newTestJobService(ctx context.Context, provider forecastProvider, workers, queueSize int) *jobService {
+	var service *jobService
+	publisher := publisherFunc(func(ctx context.Context, event forecastEvent) error {
+		return service.evaluateEvent(event, kafkaReceipt{Topic: "unit-test", Partition: 0, Offset: 1})
+	})
+	service = newJobService(ctx, provider, workers, queueSize, publisher, alertRules{35, 0, 15})
+	return service
 }

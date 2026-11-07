@@ -86,6 +86,26 @@ func envPositiveInt(name string, fallback int) int {
 	return n
 }
 
+func envFloat(name string, fallback float64) float64 {
+	value := strings.TrimSpace(os.Getenv(name))
+	if value == "" {
+		return fallback
+	}
+	n, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		slog.Error("invalid numeric alert setting", "setting", name)
+		os.Exit(1)
+	}
+	return n
+}
+
+func envText(name, fallback string) string {
+	if value := strings.TrimSpace(os.Getenv(name)); value != "" {
+		return value
+	}
+	return fallback
+}
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -107,7 +127,30 @@ func main() {
 	}
 	workerCtx, cancelWorkers := context.WithCancel(ctx)
 	defer cancelWorkers()
-	jobs := newJobService(workerCtx, provider, envPositiveInt("WORKER_COUNT", 4), envPositiveInt("QUEUE_SIZE", 16))
+	rules := alertRules{
+		HighTempC: envFloat("HIGH_TEMP_C", defaultHighTempC),
+		LowTempC:  envFloat("LOW_TEMP_C", 0),
+		HighWind:  envFloat("HIGH_WIND_MPS", 15),
+	}
+	if err := rules.validate(); err != nil {
+		slog.Error("invalid alert rules", "error", err)
+		os.Exit(1)
+	}
+	brokers := strings.Split(envText("KAFKA_BROKERS", "localhost:9092"), ",")
+	for i := range brokers {
+		brokers[i] = strings.TrimSpace(brokers[i])
+	}
+	startupCtx, cancelStartup := context.WithTimeout(ctx, 20*time.Second)
+	bus, err := newKafkaBus(startupCtx, brokers, envText("KAFKA_TOPIC", "weather.forecasts"), envText("KAFKA_GROUP", "weather-alerts"))
+	cancelStartup()
+	if err != nil {
+		slog.Error("Kafka startup failed", "error", err)
+		os.Exit(1)
+	}
+	defer bus.Close()
+	jobs := newJobService(workerCtx, provider, envPositiveInt("WORKER_COUNT", 4), envPositiveInt("QUEUE_SIZE", 16), bus, rules)
+	consumerDone := make(chan struct{})
+	go func() { defer close(consumerDone); bus.consume(workerCtx, jobs.evaluateEvent) }()
 	server := &http.Server{
 		Addr: addr, Handler: routes(jobs, key != ""),
 		ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second,
@@ -133,4 +176,5 @@ func main() {
 	}
 	cancelWorkers()
 	jobs.workers.Wait()
+	<-consumerDone
 }

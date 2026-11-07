@@ -5,6 +5,15 @@ services:
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
       WORKER_COUNT: ${WORKER_COUNT:-4}
       QUEUE_SIZE: ${QUEUE_SIZE:-16}
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_TOPIC: weather.forecasts
+      KAFKA_GROUP: weather-alerts
+      HIGH_TEMP_C: ${HIGH_TEMP_C:-32.22222222222222}
+      LOW_TEMP_C: ${LOW_TEMP_C:-0}
+      HIGH_WIND_MPS: ${HIGH_WIND_MPS:-15}
+    depends_on:
+      kafka:
+        condition: service_healthy
     ports:
       - "127.0.0.1:8080:8080"
     healthcheck:
