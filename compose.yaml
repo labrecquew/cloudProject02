@@ -67,8 +67,11 @@ services:
       # Local development only; set a private password before cloud deployment.
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-local-dev-only}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/weather.json
     volumes:
       - ./config/grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+      - ./config/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/cloudProject02.yml:ro
+      - ./config/dashboards:/etc/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus

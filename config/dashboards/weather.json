@@ -1,0 +1,1290 @@
+{
+  "id": null,
+  "uid": "weather-forecasts",
+  "title": "Weather Forecasts",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "cloudProject02",
+    "weather"
+  ],
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "Forecast guide",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Choose a **ZIP code** above. Temperatures are **Fahrenheit** and wind is **mph**. Charts show the future times predicted by the latest completed request. Times use the browser time zone.\n\nNo forecast? Submit a request through the application, then refresh. Current snapshots expire after 30 minutes; a shorter request replaces the previous forecast for that ZIP."
+      }
+    },
+    {
+      "id": 2,
+      "title": "Forecast high",
+      "type": "stat",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max(weather_forecast_temperature_celsius{job=\"weather-monitor\",zip=\"$zip\"}) * 9 / 5 + 32",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Forecast low",
+      "type": "stat",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 4,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "min(weather_forecast_temperature_celsius{job=\"weather-monitor\",zip=\"$zip\"}) * 9 / 5 + 32",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Peak wind",
+      "type": "stat",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 8,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max(weather_forecast_wind_meters_per_second{job=\"weather-monitor\",zip=\"$zip\"}) * 2.2369362920544",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "High-temperature threshold",
+      "type": "stat",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 12,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_alert_threshold_temperature_celsius{job=\"weather-monitor\",type=\"high_temperature\"} * 9 / 5 + 32",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        }
+      ],
+      "description": "An alert triggers at or above this value.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Low-temperature threshold",
+      "type": "stat",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 16,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_alert_threshold_temperature_celsius{job=\"weather-monitor\",type=\"low_temperature\"} * 9 / 5 + 32",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        }
+      ],
+      "description": "An alert triggers at or below this value.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "title": "High-wind threshold",
+      "type": "stat",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 20,
+        "y": 3,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_alert_threshold_wind_meters_per_second{job=\"weather-monitor\"} * 2.2369362920544",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        }
+      ],
+      "description": "An alert triggers at or above this value.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 8,
+      "title": "Temperature forecast",
+      "type": "xychart",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_valid_time_seconds{job=\"weather-monitor\",zip=\"$zip\"} * 1000",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_temperature_celsius{job=\"weather-monitor\",zip=\"$zip\"} * 9 / 5 + 32",
+          "refId": "B",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_wind_meters_per_second{job=\"weather-monitor\",zip=\"$zip\"} * 2.2369362920544",
+          "refId": "C",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "description": "Latest completed forecast. The horizontal axis is forecast valid time, not data collection time.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "fahrenheit",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "show": "points+lines",
+            "lineWidth": 2,
+            "pointSize": {
+              "fixed": 4
+            },
+            "axisLabel": "Temperature forecast"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Forecast time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Forecast time"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "mapping": "manual",
+        "series": [
+          {
+            "frame": {
+              "matcher": {
+                "id": "byIndex",
+                "options": 0
+              }
+            },
+            "name": {
+              "fixed": "Temperature"
+            },
+            "x": {
+              "matcher": {
+                "id": "byName",
+                "options": "Forecast time"
+              }
+            },
+            "y": {
+              "matcher": {
+                "id": "byName",
+                "options": "Temperature"
+              }
+            }
+          }
+        ],
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "A"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Forecast time",
+              "Value #A": "Forecast time"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "B"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Temperature",
+              "Value #B": "Temperature"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "C"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Wind",
+              "Value #C": "Wind"
+            }
+          }
+        },
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "step",
+            "mode": "outerTabular"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "Forecast time",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Forecast time",
+                "desc": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "step": true
+            },
+            "indexByName": {
+              "Forecast time": 0,
+              "Temperature": 1,
+              "Wind": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Wind forecast",
+      "type": "xychart",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 12,
+        "y": 7,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_valid_time_seconds{job=\"weather-monitor\",zip=\"$zip\"} * 1000",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_temperature_celsius{job=\"weather-monitor\",zip=\"$zip\"} * 9 / 5 + 32",
+          "refId": "B",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_wind_meters_per_second{job=\"weather-monitor\",zip=\"$zip\"} * 2.2369362920544",
+          "refId": "C",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "description": "Latest completed forecast. The horizontal axis is forecast valid time, not data collection time.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitymph",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "show": "points+lines",
+            "lineWidth": 2,
+            "pointSize": {
+              "fixed": 4
+            },
+            "axisLabel": "Wind forecast"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Forecast time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Forecast time"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "mapping": "manual",
+        "series": [
+          {
+            "frame": {
+              "matcher": {
+                "id": "byIndex",
+                "options": 0
+              }
+            },
+            "name": {
+              "fixed": "Wind"
+            },
+            "x": {
+              "matcher": {
+                "id": "byName",
+                "options": "Forecast time"
+              }
+            },
+            "y": {
+              "matcher": {
+                "id": "byName",
+                "options": "Wind"
+              }
+            }
+          }
+        ],
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "A"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Forecast time",
+              "Value #A": "Forecast time"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "B"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Temperature",
+              "Value #B": "Temperature"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "C"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Wind",
+              "Value #C": "Wind"
+            }
+          }
+        },
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "step",
+            "mode": "outerTabular"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "Forecast time",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Forecast time",
+                "desc": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "step": true
+            },
+            "indexByName": {
+              "Forecast time": 0,
+              "Temperature": 1,
+              "Wind": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Forecast details",
+      "type": "table",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 16,
+        "h": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_valid_time_seconds{job=\"weather-monitor\",zip=\"$zip\"} * 1000",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_temperature_celsius{job=\"weather-monitor\",zip=\"$zip\"} * 9 / 5 + 32",
+          "refId": "B",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_wind_meters_per_second{job=\"weather-monitor\",zip=\"$zip\"} * 2.2369362920544",
+          "refId": "C",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 1,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Forecast time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Temperature"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "fahrenheit"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Wind"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "velocitymph"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Forecast time",
+            "desc": false
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "A"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Forecast time",
+              "Value #A": "Forecast time"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "B"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Temperature",
+              "Value #B": "Temperature"
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "filter": {
+            "id": "byRefId",
+            "options": "C"
+          },
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "zip": true
+            },
+            "renameByName": {
+              "Value": "Wind",
+              "Value #C": "Wind"
+            }
+          }
+        },
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "step",
+            "mode": "outerTabular"
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "Forecast time",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Forecast time",
+                "desc": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "step": true
+            },
+            "indexByName": {
+              "Forecast time": 0,
+              "Temperature": 1,
+              "Wind": 2
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Alerts in this forecast",
+      "type": "stat",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 16,
+        "y": 16,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_alerts{job=\"weather-monitor\",zip=\"$zip\",type=\"high_temperature\"}",
+          "refId": "A",
+          "legendFormat": "High temperature",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_alerts{job=\"weather-monitor\",zip=\"$zip\",type=\"low_temperature\"}",
+          "refId": "B",
+          "legendFormat": "Low temperature",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "weather_forecast_alerts{job=\"weather-monitor\",zip=\"$zip\",type=\"high_wind\"}",
+          "refId": "C",
+          "legendFormat": "High wind",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        }
+      ],
+      "description": "Each forecast timestamp meeting a rule counts as one alert. These are application-defined thresholds, not official weather warnings.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "orientation": "vertical",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 12,
+      "title": "Age of latest evaluation",
+      "type": "stat",
+      "pluginVersion": "12.2.0",
+      "gridPos": {
+        "x": 16,
+        "y": 22,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "time() - weather_forecast_updated_time_seconds{job=\"weather-monitor\",zip=\"$zip\"}",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false,
+          "format": "time_series"
+        }
+      ],
+      "description": "Time since the latest completed evaluation for this ZIP.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "noValue": "No recent data",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "zip",
+        "label": "ZIP code",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": {
+          "query": "label_values(weather_forecast_temperature_celsius{job=\"weather-monitor\"}, zip)",
+          "refId": "ZIPCodes"
+        },
+        "definition": "label_values(weather_forecast_temperature_celsius{job=\"weather-monitor\"}, zip)",
+        "refresh": 1,
+        "sort": 1,
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "text": "12601",
+          "value": "12601"
+        },
+        "options": []
+      }
+    ]
+  },
+  "links": [
+    {
+      "type": "link",
+      "title": "Weather Forecasts",
+      "url": "/d/weather-forecasts/weather-forecasts",
+      "targetBlank": false
+    },
+    {
+      "type": "link",
+      "title": "Weather Pipeline",
+      "url": "/d/weather-pipeline/weather-pipeline",
+      "targetBlank": false
+    }
+  ],
+  "annotations": {
+    "list": []
+  }
+}

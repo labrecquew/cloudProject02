@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: cloudProject02
+    orgId: 1
+    folder: Cloud Project 02
+    folderUid: cloud-project-02
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 10
+    options:
+      path: /etc/grafana/dashboards
