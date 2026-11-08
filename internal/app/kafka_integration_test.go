@@ -37,6 +37,7 @@ func TestKafkaRoundTrip(t *testing.T) {
 		f.Points = append(f.Points, ForecastPoint{f.Points[0].Time.Add(time.Hour), 0, 1})
 		return f, nil
 	}), 4, 8, bus, alertRules{35, 0, 15})
+	bus.metrics = service.metrics
 	duplicates := make(chan string, 4)
 	done := make(chan struct{})
 	go func() {
@@ -113,6 +114,22 @@ func TestKafkaRoundTrip(t *testing.T) {
 		case <-ctx.Done():
 			t.Fatal("consumer did not recover")
 		case <-time.After(10 * time.Millisecond):
+		}
+	}
+	for _, check := range []struct {
+		name   string
+		labels map[string]string
+		want   float64
+	}{
+		{"weather_requests_finished_total", map[string]string{"status": "completed"}, 5},
+		{"weather_alerts_total", map[string]string{"type": "high_temperature"}, 5},
+		{"weather_alerts_total", map[string]string{"type": "low_temperature"}, 5},
+		{"weather_alerts_total", map[string]string{"type": "high_wind"}, 5},
+		{"weather_kafka_invalid_records_total", nil, 1},
+		{"weather_kafka_ignored_events_total", map[string]string{"reason": "duplicate"}, 1},
+	} {
+		if got, ok := metricValue(t, service.metrics, check.name, check.labels); !ok || got != check.want {
+			t.Fatalf("%s: got %v, want %v", check.name, got, check.want)
 		}
 	}
 	after, _ := service.lookup(first.ID)

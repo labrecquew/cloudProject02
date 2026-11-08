@@ -2,7 +2,13 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  # The Go application's metrics will be added when instrumentation is implemented.
   - job_name: prometheus
     static_configs:
       - targets: ["localhost:9090"]
+
+  - job_name: weather-monitor
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["app:8080"]

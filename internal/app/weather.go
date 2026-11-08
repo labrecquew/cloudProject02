@@ -55,15 +55,16 @@ type forecastProvider interface {
 }
 
 type openWeather struct {
-	key    string
-	client *http.Client
-	base   string
-	ticks  <-chan time.Time
+	key     string
+	client  *http.Client
+	base    string
+	ticks   <-chan time.Time
+	metrics *appMetrics
 }
 
 // All workers share this provider and its ticker: at most one outgoing API call
 // per tick, including geocoding. Tests can supply no ticker to avoid real delays.
-func (p *openWeather) get(ctx context.Context, path string, query url.Values, out any) error {
+func (p *openWeather) get(ctx context.Context, path string, query url.Values, out any) (callErr error) {
 	if p.ticks != nil {
 		select {
 		case <-ctx.Done():
@@ -75,6 +76,21 @@ func (p *openWeather) get(ctx context.Context, path string, query url.Values, ou
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, p.base+path+"?"+query.Encode(), nil)
 	if err != nil {
 		return errors.New("could not construct weather request")
+	}
+	start := time.Now()
+	if p.metrics != nil {
+		endpoint := "forecast"
+		if path == "/geo/1.0/zip" {
+			endpoint = "geocoding"
+		}
+		defer func() {
+			result := "success"
+			if callErr != nil {
+				result = "error"
+			}
+			p.metrics.providerCalls.WithLabelValues(endpoint, result).Inc()
+			p.metrics.providerTime.WithLabelValues(endpoint).Observe(time.Since(start).Seconds())
+		}()
 	}
 	resp, err := p.client.Do(req)
 	if err != nil {

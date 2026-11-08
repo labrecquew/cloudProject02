@@ -70,6 +70,10 @@ func routes(jobs *jobService, configured bool) http.Handler {
 		}
 		writeJSON(w, http.StatusOK, job)
 	})
+	if jobs.metrics != nil {
+		mux.Handle("GET /metrics", jobs.metrics.handler())
+		return jobs.metrics.instrument(mux)
+	}
 	return mux
 }
 
@@ -150,6 +154,7 @@ func Run() {
 	}
 	defer bus.Close()
 	jobs := newJobService(workerCtx, provider, envPositiveInt("WORKER_COUNT", 4), envPositiveInt("QUEUE_SIZE", 16), bus, rules)
+	provider.metrics, bus.metrics = jobs.metrics, jobs.metrics
 	consumerDone := make(chan struct{})
 	go func() { defer close(consumerDone); bus.consume(workerCtx, jobs.evaluateEvent) }()
 	server := &http.Server{

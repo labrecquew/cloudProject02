@@ -30,8 +30,9 @@ type forecastPublisher interface {
 }
 
 type kafkaBus struct {
-	writer *kafka.Writer
-	reader *kafka.Reader
+	writer  *kafka.Writer
+	reader  *kafka.Reader
+	metrics *appMetrics
 }
 
 func newKafkaBus(ctx context.Context, brokers []string, topic, group string) (*kafkaBus, error) {
@@ -79,7 +80,16 @@ func newKafkaBus(ctx context.Context, brokers []string, topic, group string) (*k
 	}, nil
 }
 
-func (b *kafkaBus) Publish(ctx context.Context, event forecastEvent) error {
+func (b *kafkaBus) Publish(ctx context.Context, event forecastEvent) (publishErr error) {
+	if b.metrics != nil {
+		defer func() {
+			result := "success"
+			if publishErr != nil {
+				result = "error"
+			}
+			b.metrics.kafkaOps.WithLabelValues("publish", result).Inc()
+		}()
+	}
 	value, err := json.Marshal(event)
 	if err != nil {
 		return errors.New("could not encode forecast event")
@@ -97,11 +107,17 @@ func (b *kafkaBus) consume(ctx context.Context, handle func(forecastEvent, kafka
 			if ctx.Err() != nil {
 				return
 			}
+			if b.metrics != nil {
+				b.metrics.kafkaOps.WithLabelValues("consume", "error").Inc()
+			}
 			slog.Warn("Kafka consumption failed; retrying")
 			if !waitForRetry(ctx) {
 				return
 			}
 			continue
+		}
+		if b.metrics != nil {
+			b.metrics.kafkaOps.WithLabelValues("consume", "success").Inc()
 		}
 		var event forecastEvent
 		err = json.Unmarshal(message.Value, &event)
@@ -114,16 +130,25 @@ func (b *kafkaBus) consume(ctx context.Context, handle func(forecastEvent, kafka
 		if err != nil {
 			// Invalid records are logged and skipped so one poison record cannot
 			// permanently prevent later valid requests from being evaluated.
+			if b.metrics != nil {
+				b.metrics.invalid.Inc()
+			}
 			slog.Warn("discarding invalid forecast event", "partition", message.Partition, "offset", message.Offset)
 		}
 		// Commit only after handling. Retry a failed commit before fetching more.
 		// Redelivery is safe because job completion is idempotent by request ID.
 		for ctx.Err() == nil {
 			if err := b.reader.CommitMessages(ctx, message); err == nil {
+				if b.metrics != nil {
+					b.metrics.kafkaOps.WithLabelValues("commit", "success").Inc()
+				}
 				break
 			}
 			if ctx.Err() != nil {
 				return
+			}
+			if b.metrics != nil {
+				b.metrics.kafkaOps.WithLabelValues("commit", "error").Inc()
 			}
 			slog.Warn("Kafka offset commit failed; retrying")
 			if !waitForRetry(ctx) {

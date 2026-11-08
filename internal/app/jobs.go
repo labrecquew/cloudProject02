@@ -36,6 +36,7 @@ type jobService struct {
 	maxJobs   int
 	timeout   time.Duration
 	workers   sync.WaitGroup
+	metrics   *appMetrics
 }
 
 func newJobService(ctx context.Context, provider forecastProvider, workers, queueSize int, publisher forecastPublisher, rules alertRules) *jobService {
@@ -43,6 +44,7 @@ func newJobService(ctx context.Context, provider forecastProvider, workers, queu
 		jobs: make(map[string]Job), done: make(map[string]chan struct{}), queue: make(chan string, queueSize),
 		provider: provider, publisher: publisher, rules: rules, maxJobs: 256, timeout: 30 * time.Second,
 	}
+	s.metrics = newAppMetrics(s.queue, rules)
 	for i := 0; i < workers; i++ {
 		s.workers.Add(1)
 		go func() { defer s.workers.Done(); s.worker(ctx) }()
@@ -72,14 +74,23 @@ func (s *jobService) submit(input ForecastRequest) (Job, error) {
 	defer s.mu.Unlock()
 	s.cleanupLocked(now)
 	if len(s.jobs) >= s.maxJobs {
+		if s.metrics != nil {
+			s.metrics.rejected.Inc()
+		}
 		return Job{}, errBusy
 	}
 	s.jobs[job.ID] = job
 	select {
 	case s.queue <- job.ID:
+		if s.metrics != nil {
+			s.metrics.accepted.Inc()
+		}
 		return job, nil
 	default:
 		delete(s.jobs, job.ID)
+		if s.metrics != nil {
+			s.metrics.rejected.Inc()
+		}
 		return Job{}, errBusy
 	}
 }
@@ -98,11 +109,14 @@ func (s *jobService) fail(id string, err error) {
 	job := s.jobs[id]
 	// An acknowledgment can fail even if the consumer already processed the
 	// record. Never overwrite a confirmed evaluated result with a later error.
-	if job.Status == "completed" {
+	if job.Status == "completed" || job.Status == "failed" {
 		return
 	}
 	job.Status, job.Error, job.UpdatedAt = "failed", err.Error(), time.Now().UTC()
 	s.jobs[id] = job
+	if s.metrics != nil {
+		s.metrics.finishedJob(job)
+	}
 }
 
 func (s *jobService) worker(ctx context.Context) {
@@ -120,8 +134,15 @@ func (s *jobService) worker(ctx context.Context) {
 }
 
 func (s *jobService) process(ctx context.Context, id string) {
+	if s.metrics != nil {
+		s.metrics.active.Inc()
+		defer s.metrics.active.Dec()
+	}
 	s.mu.Lock()
 	job := s.jobs[id]
+	if s.metrics != nil {
+		s.metrics.queueWait.Observe(time.Since(job.CreatedAt).Seconds())
+	}
 	job.Status, job.UpdatedAt = "running", time.Now().UTC()
 	s.jobs[id] = job
 	s.mu.Unlock()
@@ -160,6 +181,16 @@ func (s *jobService) evaluateEvent(event forecastEvent, receipt kafkaReceipt) er
 	// Results are in memory: old records after restart/expiry cannot restore
 	// lookups. Ignore them. This deployment supports one application instance.
 	if !ok || job.Status == "completed" || job.Status == "failed" {
+		if s.metrics != nil {
+			reason := "unknown_job"
+			if ok && job.Status == "completed" {
+				reason = "duplicate"
+			}
+			if ok && job.Status == "failed" {
+				reason = "failed_job"
+			}
+			s.metrics.ignored.WithLabelValues(reason).Inc()
+		}
 		return nil
 	}
 	if event.Version != 1 || job.Status != "awaiting_evaluation" || event.Forecast.ZIP != job.Request.ZIP || event.Forecast.Days != job.Request.Days {
@@ -178,6 +209,9 @@ func (s *jobService) evaluateEvent(event forecastEvent, receipt kafkaReceipt) er
 	job.Forecast, job.Alerts, job.Rules, job.Kafka = &f, s.rules.evaluate(f), &s.rules, &receipt
 	job.Status, job.UpdatedAt = "completed", time.Now().UTC()
 	s.jobs[event.JobID] = job
+	if s.metrics != nil {
+		s.metrics.finishedJob(job)
+	}
 	if done := s.done[event.JobID]; done != nil {
 		close(done)
 	}
