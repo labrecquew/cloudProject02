@@ -132,8 +132,8 @@ func TestValidationAndMissingKey(t *testing.T) {
 	}
 }
 
-func TestQueueCapacityAndExpiry(t *testing.T) {
-	service := &jobService{jobs: make(map[string]Job), queue: make(chan string, 1), maxJobs: 2}
+func TestQueueCapacityAndResultRetention(t *testing.T) {
+	service := &jobService{jobs: make(map[string]Job), queue: make(chan string, 1), maxJobs: 3}
 	input := ForecastRequest{ZIP: "02108", Days: 1}
 	if _, err := service.submit(input); err != nil {
 		t.Fatal(err)
@@ -144,9 +144,26 @@ func TestQueueCapacityAndExpiry(t *testing.T) {
 	if len(service.jobs) != 1 {
 		t.Fatal("rejected job was retained")
 	}
-	service.jobs["expired"] = Job{ID: "expired", Status: "completed", UpdatedAt: time.Now().Add(-31 * time.Minute)}
-	if _, ok := service.lookup("expired"); ok {
-		t.Fatal("completed result did not expire")
+	now := time.Now()
+	service.jobs["older"] = Job{ID: "older", Status: "completed", UpdatedAt: now.Add(-time.Hour)}
+	service.jobs["newer"] = Job{ID: "newer", Status: "failed", UpdatedAt: now.Add(-time.Minute)}
+	if _, err := service.submit(input); !errors.Is(err, errBusy) {
+		t.Fatal("full queue must reject without evicting a saved result")
+	}
+	if _, ok := service.lookup("older"); !ok {
+		t.Fatal("result was removed before a new request was accepted")
+	}
+	activeID := <-service.queue
+	if _, err := service.submit(input); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := service.lookup("older"); ok {
+		t.Fatal("oldest finished result was not evicted at capacity")
+	}
+	for _, id := range []string{"newer", activeID} {
+		if _, ok := service.lookup(id); !ok {
+			t.Fatalf("request %s was incorrectly evicted", id)
+		}
 	}
 }
 

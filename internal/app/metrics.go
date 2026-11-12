@@ -23,24 +23,25 @@ type forecastSnapshot struct {
 }
 
 type appMetrics struct {
-	registry      *prometheus.Registry
-	accepted      prometheus.Counter
-	rejected      prometheus.Counter
-	finished      *prometheus.CounterVec
-	alerts        *prometheus.CounterVec
-	duration      *prometheus.HistogramVec
-	queueWait     prometheus.Histogram
-	active        prometheus.Gauge
-	httpRequests  *prometheus.CounterVec
-	httpDuration  *prometheus.HistogramVec
-	providerCalls *prometheus.CounterVec
-	providerTime  *prometheus.HistogramVec
-	kafkaOps      *prometheus.CounterVec
-	ignored       *prometheus.CounterVec
-	invalid       prometheus.Counter
-	mu            sync.Mutex
-	forecasts     map[string]forecastSnapshot
-	descriptors   map[string]*prometheus.Desc
+	registry           *prometheus.Registry
+	accepted           prometheus.Counter
+	rejected           prometheus.Counter
+	finished           *prometheus.CounterVec
+	alerts             *prometheus.CounterVec
+	duration           *prometheus.HistogramVec
+	queueWait          prometheus.Histogram
+	active             prometheus.Gauge
+	httpRequests       *prometheus.CounterVec
+	httpDuration       *prometheus.HistogramVec
+	providerCalls      *prometheus.CounterVec
+	providerTime       *prometheus.HistogramVec
+	kafkaOps           *prometheus.CounterVec
+	ignored            *prometheus.CounterVec
+	invalid            prometheus.Counter
+	mu                 sync.Mutex
+	forecasts          map[string]forecastSnapshot
+	descriptors        map[string]*prometheus.Desc
+	completedForecasts func() []Job
 }
 
 func newAppMetrics(queue chan string, rules alertRules) *appMetrics {
@@ -103,6 +104,13 @@ func newAppMetrics(queue chan string, rules alertRules) *appMetrics {
 		m.descriptors[name] = prometheus.NewDesc(name, help, []string{"zip"}, nil)
 	}
 	m.descriptors["weather_forecast_alerts"] = prometheus.NewDesc("weather_forecast_alerts", "Alert counts in the latest evaluated forecast for a ZIP, not cumulative counts.", []string{"zip", "type"}, nil)
+	for name, help := range map[string]string{
+		"weather_request_forecast_temperature_celsius":    "Forecast temperature for a completed request and forecast step.",
+		"weather_request_forecast_wind_meters_per_second": "Forecast wind for a completed request and forecast step.",
+		"weather_request_forecast_valid_time_seconds":     "Forecast valid time for a completed request and forecast step.",
+	} {
+		m.descriptors[name] = prometheus.NewDesc(name, help, []string{"request_id", "zip", "step"}, nil)
+	}
 	thresholdTemp := prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: "weather_alert_threshold_temperature_celsius", Help: "Configured high and low temperature thresholds."}, []string{"type"})
 	thresholdTemp.WithLabelValues("high_temperature").Set(rules.HighTempC)
 	thresholdTemp.WithLabelValues("low_temperature").Set(rules.LowTempC)
@@ -161,12 +169,23 @@ func (m *appMetrics) Describe(out chan<- *prometheus.Desc) {
 }
 
 func (m *appMetrics) Collect(out chan<- prometheus.Metric) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.expireLocked(time.Now())
 	emit := func(name string, value float64, labels ...string) {
 		out <- prometheus.MustNewConstMetric(m.descriptors[name], prometheus.GaugeValue, value, labels...)
 	}
+	// Read the jobs before taking m.mu. Evaluation records metrics while holding the job lock.
+	if m.completedForecasts != nil {
+		for _, job := range m.completedForecasts() {
+			for i, point := range job.Forecast.Points {
+				step := strconv.Itoa(i + 1)
+				emit("weather_request_forecast_temperature_celsius", point.TemperatureCelsius, job.ID, job.Request.ZIP, step)
+				emit("weather_request_forecast_wind_meters_per_second", point.WindMetersPerSec, job.ID, job.Request.ZIP, step)
+				emit("weather_request_forecast_valid_time_seconds", float64(point.Time.Unix()), job.ID, job.Request.ZIP, step)
+			}
+		}
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.expireLocked(time.Now())
 	for zip, snapshot := range m.forecasts {
 		f := snapshot.forecast
 		emit("weather_forecast_updated_time_seconds", float64(snapshot.updated.Unix()), zip)
@@ -224,6 +243,16 @@ func (m *appMetrics) instrument(next http.Handler) http.Handler {
 		}
 		route := "other"
 		switch {
+		case r.URL.Path == "/":
+			route = "home"
+		case r.URL.Path == "/request":
+			route = "web_submit"
+		case r.Pattern == "GET /requests/{id}":
+			route = "web_result"
+		case r.URL.Path == "/about":
+			route = "about"
+		case r.URL.Path == "/static/style.css":
+			route = "static"
 		case r.URL.Path == "/healthz":
 			route = "health"
 		case r.URL.Path == "/forecasts":

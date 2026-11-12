@@ -45,6 +45,7 @@ func newJobService(ctx context.Context, provider forecastProvider, workers, queu
 		provider: provider, publisher: publisher, rules: rules, maxJobs: 256, timeout: 30 * time.Second,
 	}
 	s.metrics = newAppMetrics(s.queue, rules)
+	s.metrics.completedForecasts = s.completedForecasts
 	for i := 0; i < workers; i++ {
 		s.workers.Add(1)
 		go func() { defer s.workers.Done(); s.worker(ctx) }()
@@ -52,12 +53,18 @@ func newJobService(ctx context.Context, provider forecastProvider, workers, queu
 	return s
 }
 
-func (s *jobService) cleanupLocked(now time.Time) {
+func (s *jobService) oldestFinishedLocked() string {
+	var oldestID string
+	var oldestTime time.Time
 	for id, job := range s.jobs {
-		if (job.Status == "completed" || job.Status == "failed") && now.Sub(job.UpdatedAt) >= 30*time.Minute {
-			delete(s.jobs, id)
+		if job.Status != "completed" && job.Status != "failed" {
+			continue
+		}
+		if oldestID == "" || job.UpdatedAt.Before(oldestTime) {
+			oldestID, oldestTime = id, job.UpdatedAt
 		}
 	}
+	return oldestID
 }
 
 func (s *jobService) submit(input ForecastRequest) (Job, error) {
@@ -72,22 +79,28 @@ func (s *jobService) submit(input ForecastRequest) (Job, error) {
 	job := Job{ID: hex.EncodeToString(bytes[:]), Request: input, Status: "queued", CreatedAt: now, UpdatedAt: now}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.cleanupLocked(now)
+	var evictID string
 	if len(s.jobs) >= s.maxJobs {
-		if s.metrics != nil {
-			s.metrics.rejected.Inc()
+		evictID = s.oldestFinishedLocked()
+		if evictID == "" {
+			if s.metrics != nil {
+				s.metrics.rejected.Inc()
+			}
+			return Job{}, errBusy
 		}
-		return Job{}, errBusy
 	}
-	s.jobs[job.ID] = job
 	select {
 	case s.queue <- job.ID:
+		// Workers read the job under this same lock after receiving its ID.
+		if evictID != "" {
+			delete(s.jobs, evictID)
+		}
+		s.jobs[job.ID] = job
 		if s.metrics != nil {
 			s.metrics.accepted.Inc()
 		}
 		return job, nil
 	default:
-		delete(s.jobs, job.ID)
 		if s.metrics != nil {
 			s.metrics.rejected.Inc()
 		}
@@ -95,10 +108,21 @@ func (s *jobService) submit(input ForecastRequest) (Job, error) {
 	}
 }
 
+func (s *jobService) completedForecasts() []Job {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	completed := make([]Job, 0, len(s.jobs))
+	for _, job := range s.jobs {
+		if job.Status == "completed" && job.Forecast != nil {
+			completed = append(completed, job)
+		}
+	}
+	return completed
+}
+
 func (s *jobService) lookup(id string) (Job, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.cleanupLocked(time.Now())
 	job, ok := s.jobs[id]
 	return job, ok
 }
@@ -178,7 +202,7 @@ func (s *jobService) evaluateEvent(event forecastEvent, receipt kafkaReceipt) er
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	job, ok := s.jobs[event.JobID]
-	// Results are in memory: old records after restart/expiry cannot restore
+	// Results are in memory: old records after restart or eviction cannot restore
 	// lookups. Ignore them. This deployment supports one application instance.
 	if !ok || job.Status == "completed" || job.Status == "failed" {
 		if s.metrics != nil {

@@ -8,21 +8,21 @@ import (
 )
 
 func TestAlertThresholdBoundaries(t *testing.T) {
-	rules := alertRules{defaultHighTempC, 0, 15}
+	rules := alertRules{defaultHighTempC, defaultLowTempC, defaultHighWindMPS}
 	for _, tc := range []struct {
 		name       string
 		temp, wind float64
 		types      []string
 	}{
 		{"normal", 20, 5, nil},
-		{"below 90F", (89.9 - 32) * 5 / 9, 14.99, nil},
-		{"exactly 90F", (90.0 - 32) * 5 / 9, 5, []string{"high_temperature"}},
-		{"above 90F", (90.1 - 32) * 5 / 9, 5, []string{"high_temperature"}},
-		{"low equals", 0, 5, []string{"low_temperature"}},
-		{"low exceeds", -1, 5, []string{"low_temperature"}},
-		{"above low", 0.01, 5, nil},
-		{"wind equals", 20, 15, []string{"high_wind"}},
-		{"combined", 35, 16, []string{"high_temperature", "high_wind"}},
+		{"below 100F and 40 mph", (99.9 - 32) * 5 / 9, 39.9 * 0.44704, nil},
+		{"exactly 100F", (100.0 - 32) * 5 / 9, 5, []string{"high_temperature"}},
+		{"above 100F", (100.1 - 32) * 5 / 9, 5, []string{"high_temperature"}},
+		{"exactly 20F", (20.0 - 32) * 5 / 9, 5, []string{"low_temperature"}},
+		{"below 20F", (19.9 - 32) * 5 / 9, 5, []string{"low_temperature"}},
+		{"above 20F", (20.1 - 32) * 5 / 9, 5, nil},
+		{"exactly 40 mph", 20, 40 * 0.44704, []string{"high_wind"}},
+		{"combined", 40, 18, []string{"high_temperature", "high_wind"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			at := time.Now().UTC()

@@ -3,14 +3,15 @@ services:
     build: .
     environment:
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+      GRAFANA_PUBLIC_URL: ${GRAFANA_PUBLIC_URL:-}
       WORKER_COUNT: ${WORKER_COUNT:-4}
       QUEUE_SIZE: ${QUEUE_SIZE:-16}
       KAFKA_BROKERS: kafka:29092
       KAFKA_TOPIC: weather.forecasts
       KAFKA_GROUP: weather-alerts
-      HIGH_TEMP_C: ${HIGH_TEMP_C:-32.22222222222222}
-      LOW_TEMP_C: ${LOW_TEMP_C:-0}
-      HIGH_WIND_MPS: ${HIGH_WIND_MPS:-15}
+      HIGH_TEMP_C: ${HIGH_TEMP_C:-37.77777777777778}
+      LOW_TEMP_C: ${LOW_TEMP_C:--6.666666666666667}
+      HIGH_WIND_MPS: ${HIGH_WIND_MPS:-17.8816}
     depends_on:
       kafka:
         condition: service_healthy
@@ -69,6 +70,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/weather.json
     volumes:
+      - ./config/grafana.ini:/etc/grafana/grafana.ini:ro
       - ./config/grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
       - ./config/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/cloudProject02.yml:ro
       - ./config/dashboards:/etc/grafana/dashboards:ro

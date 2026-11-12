@@ -26,6 +26,7 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 
 func routes(jobs *jobService, configured bool) http.Handler {
 	mux := http.NewServeMux()
+	registerWeb(mux, jobs, configured)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
@@ -65,7 +66,7 @@ func routes(jobs *jobService, configured bool) http.Handler {
 	mux.HandleFunc("GET /forecasts/{id}", func(w http.ResponseWriter, r *http.Request) {
 		job, ok := jobs.lookup(r.PathValue("id"))
 		if !ok {
-			writeJSON(w, http.StatusNotFound, map[string]string{"error": "request not found or expired"})
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "request not found"})
 			return
 		}
 		writeJSON(w, http.StatusOK, job)
@@ -134,8 +135,8 @@ func Run() {
 	defer cancelWorkers()
 	rules := alertRules{
 		HighTempC: envFloat("HIGH_TEMP_C", defaultHighTempC),
-		LowTempC:  envFloat("LOW_TEMP_C", 0),
-		HighWind:  envFloat("HIGH_WIND_MPS", 15),
+		LowTempC:  envFloat("LOW_TEMP_C", defaultLowTempC),
+		HighWind:  envFloat("HIGH_WIND_MPS", defaultHighWindMPS),
 	}
 	if err := rules.validate(); err != nil {
 		slog.Error("invalid alert rules", "error", err)

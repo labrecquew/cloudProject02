@@ -9,7 +9,7 @@
     "cloudProject02",
     "weather"
   ],
-  "timezone": "browser",
+  "timezone": "America/New_York",
   "refresh": "10s",
   "time": {
     "from": "now-1h",
@@ -406,7 +406,7 @@
     {
       "id": 8,
       "title": "Temperature forecast",
-      "type": "xychart",
+      "type": "barchart",
       "pluginVersion": "12.2.0",
       "gridPos": {
         "x": 0,
@@ -425,7 +425,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "weather_forecast_valid_time_seconds{job=\"weather-monitor\",zip=\"$zip\"} * 1000",
+          "expr": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"$forecast_request\",job=\"weather-monitor\",zip=\"$zip\"} * 1000",
           "refId": "A",
           "legendFormat": "",
           "instant": true,
@@ -438,28 +438,15 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "weather_forecast_temperature_celsius{job=\"weather-monitor\",zip=\"$zip\"} * 9 / 5 + 32",
+          "expr": "{__name__=~\"weather_(request_)?forecast_temperature_celsius\",request_id=\"$forecast_request\",job=\"weather-monitor\",zip=\"$zip\"} * 9 / 5 + 32",
           "refId": "B",
-          "legendFormat": "",
-          "instant": true,
-          "range": false,
-          "format": "table"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "weather_forecast_wind_meters_per_second{job=\"weather-monitor\",zip=\"$zip\"} * 2.2369362920544",
-          "refId": "C",
           "legendFormat": "",
           "instant": true,
           "range": false,
           "format": "table"
         }
       ],
-      "description": "Latest completed forecast. The horizontal axis is forecast valid time, not data collection time.",
+      "description": "Each bar is a three-hour forecast in Eastern time.",
       "fieldConfig": {
         "defaults": {
           "unit": "fahrenheit",
@@ -469,12 +456,9 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "show": "points+lines",
-            "lineWidth": 2,
-            "pointSize": {
-              "fixed": 4
-            },
-            "axisLabel": "Temperature forecast"
+            "lineWidth": 1,
+            "axisLabel": "Temperature forecast",
+            "fillOpacity": 75
           }
         },
         "overrides": [
@@ -486,43 +470,29 @@
             "properties": [
               {
                 "id": "unit",
-                "value": "dateTimeAsIso"
+                "value": "time:MMM D, h:mm A"
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Forecast time"
+                "value": "Forecast time (Eastern)"
+              },
+              {
+                "id": "noValue",
+                "value": ""
               }
             ]
           }
         ]
       },
       "options": {
-        "mapping": "manual",
-        "series": [
-          {
-            "frame": {
-              "matcher": {
-                "id": "byIndex",
-                "options": 0
-              }
-            },
-            "name": {
-              "fixed": "Temperature"
-            },
-            "x": {
-              "matcher": {
-                "id": "byName",
-                "options": "Forecast time"
-              }
-            },
-            "y": {
-              "matcher": {
-                "id": "byName",
-                "options": "Temperature"
-              }
-            }
-          }
-        ],
+        "orientation": "vertical",
+        "xField": "Forecast time",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 120,
+        "showValue": "never",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.65,
         "legend": {
           "showLegend": false
         },
@@ -544,7 +514,8 @@
               "__name__": true,
               "instance": true,
               "job": true,
-              "zip": true
+              "zip": true,
+              "request_id": true
             },
             "renameByName": {
               "Value": "Forecast time",
@@ -564,7 +535,8 @@
               "__name__": true,
               "instance": true,
               "job": true,
-              "zip": true
+              "zip": true,
+              "request_id": true
             },
             "renameByName": {
               "Value": "Temperature",
@@ -573,41 +545,10 @@
           }
         },
         {
-          "id": "organize",
-          "filter": {
-            "id": "byRefId",
-            "options": "C"
-          },
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "instance": true,
-              "job": true,
-              "zip": true
-            },
-            "renameByName": {
-              "Value": "Wind",
-              "Value #C": "Wind"
-            }
-          }
-        },
-        {
           "id": "joinByField",
           "options": {
             "byField": "step",
             "mode": "outerTabular"
-          }
-        },
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "targetField": "Forecast time",
-                "destinationType": "time"
-              }
-            ]
           }
         },
         {
@@ -629,17 +570,27 @@
             },
             "indexByName": {
               "Forecast time": 0,
-              "Temperature": 1,
-              "Wind": 2
+              "Temperature": 1
             }
           }
+        },
+        {
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "time",
+                "targetField": "Forecast time"
+              }
+            ]
+          },
+          "id": "convertFieldType"
         }
       ]
     },
     {
       "id": 9,
       "title": "Wind forecast",
-      "type": "xychart",
+      "type": "barchart",
       "pluginVersion": "12.2.0",
       "gridPos": {
         "x": 12,
@@ -658,7 +609,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "weather_forecast_valid_time_seconds{job=\"weather-monitor\",zip=\"$zip\"} * 1000",
+          "expr": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"$forecast_request\",job=\"weather-monitor\",zip=\"$zip\"} * 1000",
           "refId": "A",
           "legendFormat": "",
           "instant": true,
@@ -671,20 +622,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "weather_forecast_temperature_celsius{job=\"weather-monitor\",zip=\"$zip\"} * 9 / 5 + 32",
-          "refId": "B",
-          "legendFormat": "",
-          "instant": true,
-          "range": false,
-          "format": "table"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "weather_forecast_wind_meters_per_second{job=\"weather-monitor\",zip=\"$zip\"} * 2.2369362920544",
+          "expr": "{__name__=~\"weather_(request_)?forecast_wind_meters_per_second\",request_id=\"$forecast_request\",job=\"weather-monitor\",zip=\"$zip\"} * 2.2369362920544",
           "refId": "C",
           "legendFormat": "",
           "instant": true,
@@ -692,7 +630,7 @@
           "format": "table"
         }
       ],
-      "description": "Latest completed forecast. The horizontal axis is forecast valid time, not data collection time.",
+      "description": "Each bar is a three-hour forecast in Eastern time.",
       "fieldConfig": {
         "defaults": {
           "unit": "velocitymph",
@@ -702,12 +640,9 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "show": "points+lines",
-            "lineWidth": 2,
-            "pointSize": {
-              "fixed": 4
-            },
-            "axisLabel": "Wind forecast"
+            "lineWidth": 1,
+            "axisLabel": "Wind forecast",
+            "fillOpacity": 75
           }
         },
         "overrides": [
@@ -719,43 +654,29 @@
             "properties": [
               {
                 "id": "unit",
-                "value": "dateTimeAsIso"
+                "value": "time:MMM D, h:mm A"
               },
               {
                 "id": "custom.axisLabel",
-                "value": "Forecast time"
+                "value": "Forecast time (Eastern)"
+              },
+              {
+                "id": "noValue",
+                "value": ""
               }
             ]
           }
         ]
       },
       "options": {
-        "mapping": "manual",
-        "series": [
-          {
-            "frame": {
-              "matcher": {
-                "id": "byIndex",
-                "options": 0
-              }
-            },
-            "name": {
-              "fixed": "Wind"
-            },
-            "x": {
-              "matcher": {
-                "id": "byName",
-                "options": "Forecast time"
-              }
-            },
-            "y": {
-              "matcher": {
-                "id": "byName",
-                "options": "Wind"
-              }
-            }
-          }
-        ],
+        "orientation": "vertical",
+        "xField": "Forecast time",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 120,
+        "showValue": "never",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.65,
         "legend": {
           "showLegend": false
         },
@@ -777,31 +698,12 @@
               "__name__": true,
               "instance": true,
               "job": true,
-              "zip": true
+              "zip": true,
+              "request_id": true
             },
             "renameByName": {
               "Value": "Forecast time",
               "Value #A": "Forecast time"
-            }
-          }
-        },
-        {
-          "id": "organize",
-          "filter": {
-            "id": "byRefId",
-            "options": "B"
-          },
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "instance": true,
-              "job": true,
-              "zip": true
-            },
-            "renameByName": {
-              "Value": "Temperature",
-              "Value #B": "Temperature"
             }
           }
         },
@@ -817,7 +719,8 @@
               "__name__": true,
               "instance": true,
               "job": true,
-              "zip": true
+              "zip": true,
+              "request_id": true
             },
             "renameByName": {
               "Value": "Wind",
@@ -830,17 +733,6 @@
           "options": {
             "byField": "step",
             "mode": "outerTabular"
-          }
-        },
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "targetField": "Forecast time",
-                "destinationType": "time"
-              }
-            ]
           }
         },
         {
@@ -862,10 +754,20 @@
             },
             "indexByName": {
               "Forecast time": 0,
-              "Temperature": 1,
               "Wind": 2
             }
           }
+        },
+        {
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "time",
+                "targetField": "Forecast time"
+              }
+            ]
+          },
+          "id": "convertFieldType"
         }
       ]
     },
@@ -949,7 +851,7 @@
             "properties": [
               {
                 "id": "unit",
-                "value": "dateTimeAsIso"
+                "value": "time:MMM D, h:mm A"
               }
             ]
           },
@@ -1265,6 +1167,17 @@
         "current": {
           "text": "12601",
           "value": "12601"
+        },
+        "options": []
+      },
+      {
+        "name": "forecast_request",
+        "type": "textbox",
+        "hide": 2,
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
         },
         "options": []
       }

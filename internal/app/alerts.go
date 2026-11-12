@@ -6,8 +6,12 @@ import (
 	"time"
 )
 
-// 90 degrees Fahrenheit, represented in Celsius for internal comparisons.
-const defaultHighTempC = (90.0 - 32) * 5 / 9
+// Default alert limits in metric units.
+const (
+	defaultHighTempC   = (100.0 - 32) * 5 / 9
+	defaultLowTempC    = (20.0 - 32) * 5 / 9
+	defaultHighWindMPS = 40 * 0.44704
+)
 
 type alertRules struct {
 	HighTempC float64 `json:"high_temperature_celsius"`

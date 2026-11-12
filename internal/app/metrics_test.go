@@ -128,7 +128,7 @@ func TestMetricsCountFailureOnce(t *testing.T) {
 }
 
 func TestMetricsHTTPLabelsDoNotContainRequestIDs(t *testing.T) {
-	service := &jobService{jobs: make(map[string]Job), metrics: newAppMetrics(make(chan string, 2), alertRules{defaultHighTempC, 0, 15})}
+	service := &jobService{jobs: make(map[string]Job), metrics: newAppMetrics(make(chan string, 2), alertRules{defaultHighTempC, defaultLowTempC, defaultHighWindMPS})}
 	handler := routes(service, false)
 	for _, path := range []string{"/forecasts/private-id-A", "/forecasts/private-id-B", "/arbitrary-secret-path"} {
 		handler.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, path, nil))
