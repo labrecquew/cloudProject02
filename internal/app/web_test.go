@@ -120,7 +120,7 @@ func TestWebValidationMissingKeyAndCrossOrigin(t *testing.T) {
 	}
 }
 
-func TestWebAssetsAboutAndMissingResults(t *testing.T) {
+func TestWebAssetsAndMissingResults(t *testing.T) {
 	service := &jobService{jobs: make(map[string]Job), rules: alertRules{defaultHighTempC, defaultLowTempC, defaultHighWindMPS}}
 	handler := routes(service, false)
 	for _, tc := range []struct {
@@ -129,7 +129,7 @@ func TestWebAssetsAboutAndMissingResults(t *testing.T) {
 	}{
 		{"/", "Request a forecast", 200},
 		{"/static/style.css", "grid-template-columns", 200},
-		{"/about", "Topaloglu", 200},
+		{"/about", "404 page not found", 404},
 		{"/requests/missing", "no longer available", 404},
 	} {
 		w := httptest.NewRecorder()
@@ -140,18 +140,22 @@ func TestWebAssetsAboutAndMissingResults(t *testing.T) {
 	}
 }
 
-func TestDashboardLinksUsePublicHostAndConfiguredSubpath(t *testing.T) {
+func TestForecastPanelURLUsesPublicHostAndConfiguredSubpath(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "http://cloud.example:8080/", nil)
-	if got := dashboardLink(r, "weather-forecasts", "02108"); got != "http://cloud.example:3000/d/weather-forecasts/weather-forecasts?var-zip=02108" {
-		t.Fatal(got)
-	}
-	t.Setenv("GRAFANA_PUBLIC_URL", "https://charts.example/grafana/")
-	if got := dashboardLink(r, "weather-forecasts", "02108"); got != "https://charts.example/grafana/d/weather-forecasts/weather-forecasts?var-zip=02108" {
-		t.Fatal(got)
-	}
-	t.Setenv("GRAFANA_PUBLIC_URL", "javascript:alert(1)")
-	if got := dashboardLink(r, "weather-pipeline", ""); strings.HasPrefix(got, "javascript:") {
-		t.Fatal("unsafe dashboard link")
+	for _, tc := range []struct {
+		configuredURL string
+		wantBase      string
+	}{
+		{"", "http://cloud.example:3000"},
+		{"https://charts.example/grafana/", "https://charts.example/grafana"},
+		{"javascript:alert(1)", "http://cloud.example:3000"},
+	} {
+		t.Setenv("GRAFANA_PUBLIC_URL", tc.configuredURL)
+		got := forecastPanelURL(r, "8", "02108", "test-request")
+		want := tc.wantBase + "/d-solo/weather-forecasts/weather-forecasts?panelId=8&refresh=10s&theme=light&timezone=America%2FNew_York&var-forecast_request=test-request&var-zip=02108"
+		if got != want {
+			t.Fatalf("forecast panel URL = %q, want %q", got, want)
+		}
 	}
 }
 

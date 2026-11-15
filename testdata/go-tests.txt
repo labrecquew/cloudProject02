@@ -1,0 +1,93 @@
+?   	cloudProject02	[no test files]
+=== RUN   TestAlertThresholdBoundaries
+=== RUN   TestAlertThresholdBoundaries/normal
+=== RUN   TestAlertThresholdBoundaries/below_100F_and_40_mph
+=== RUN   TestAlertThresholdBoundaries/exactly_100F
+=== RUN   TestAlertThresholdBoundaries/above_100F
+=== RUN   TestAlertThresholdBoundaries/exactly_20F
+=== RUN   TestAlertThresholdBoundaries/below_20F
+=== RUN   TestAlertThresholdBoundaries/above_20F
+=== RUN   TestAlertThresholdBoundaries/exactly_40_mph
+=== RUN   TestAlertThresholdBoundaries/combined
+--- PASS: TestAlertThresholdBoundaries (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/normal (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/below_100F_and_40_mph (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/exactly_100F (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/above_100F (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/exactly_20F (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/below_20F (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/above_20F (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/exactly_40_mph (0.00s)
+    --- PASS: TestAlertThresholdBoundaries/combined (0.00s)
+=== RUN   TestInvalidAlertRules
+--- PASS: TestInvalidAlertRules (0.00s)
+=== RUN   TestCompletionRequiresEvaluationAndIgnoresDuplicates
+--- PASS: TestCompletionRequiresEvaluationAndIgnoresDuplicates (0.00s)
+=== RUN   TestPublicationFailureAndMissingConsumer
+=== RUN   TestPublicationFailureAndMissingConsumer/publish_failure
+=== RUN   TestPublicationFailureAndMissingConsumer/consumer_timeout
+--- PASS: TestPublicationFailureAndMissingConsumer (0.02s)
+    --- PASS: TestPublicationFailureAndMissingConsumer/publish_failure (0.00s)
+    --- PASS: TestPublicationFailureAndMissingConsumer/consumer_timeout (0.02s)
+=== RUN   TestConcurrentHTTPRequestsStayIsolated
+--- PASS: TestConcurrentHTTPRequestsStayIsolated (0.00s)
+=== RUN   TestValidationAndMissingKey
+--- PASS: TestValidationAndMissingKey (0.00s)
+=== RUN   TestQueueCapacityAndResultRetention
+--- PASS: TestQueueCapacityAndResultRetention (0.00s)
+=== RUN   TestProviderTimeoutBecomesFailedJob
+--- PASS: TestProviderTimeoutBecomesFailedJob (0.01s)
+=== RUN   TestMetricsCountCompletionOnce
+--- PASS: TestMetricsCountCompletionOnce (0.00s)
+=== RUN   TestMetricsCountFailureOnce
+--- PASS: TestMetricsCountFailureOnce (0.00s)
+=== RUN   TestMetricsHTTPLabelsDoNotContainRequestIDs
+--- PASS: TestMetricsHTTPLabelsDoNotContainRequestIDs (0.00s)
+=== RUN   TestMetricsQueueAndCapacityRejection
+--- PASS: TestMetricsQueueAndCapacityRejection (0.00s)
+=== RUN   TestForecastMetricsBoundedReplacedAndExpired
+--- PASS: TestForecastMetricsBoundedReplacedAndExpired (0.01s)
+=== RUN   TestConcurrentMetricScrapesAndUpdates
+--- PASS: TestConcurrentMetricScrapesAndUpdates (0.01s)
+=== RUN   TestProviderMetricsCountAttemptsWithoutLeakingKeys
+--- PASS: TestProviderMetricsCountAttemptsWithoutLeakingKeys (0.01s)
+=== RUN   TestOpenWeatherForecastWindowsAndUnits
+=== RUN   TestOpenWeatherForecastWindowsAndUnits/1
+=== RUN   TestOpenWeatherForecastWindowsAndUnits/5
+--- PASS: TestOpenWeatherForecastWindowsAndUnits (0.00s)
+    --- PASS: TestOpenWeatherForecastWindowsAndUnits/1 (0.00s)
+    --- PASS: TestOpenWeatherForecastWindowsAndUnits/5 (0.00s)
+=== RUN   TestProviderFailuresDoNotExposeAPIKey
+=== RUN   TestProviderFailuresDoNotExposeAPIKey/401
+=== RUN   TestProviderFailuresDoNotExposeAPIKey/404
+=== RUN   TestProviderFailuresDoNotExposeAPIKey/429
+=== RUN   TestProviderFailuresDoNotExposeAPIKey/500
+--- PASS: TestProviderFailuresDoNotExposeAPIKey (0.00s)
+    --- PASS: TestProviderFailuresDoNotExposeAPIKey/401 (0.00s)
+    --- PASS: TestProviderFailuresDoNotExposeAPIKey/404 (0.00s)
+    --- PASS: TestProviderFailuresDoNotExposeAPIKey/429 (0.00s)
+    --- PASS: TestProviderFailuresDoNotExposeAPIKey/500 (0.00s)
+=== RUN   TestInvalidProviderResponses
+=== RUN   TestInvalidProviderResponses/not_JSON
+=== RUN   TestInvalidProviderResponses/{}
+=== RUN   TestInvalidProviderResponses/{"list":[]}
+=== RUN   TestInvalidProviderResponses/{"list":[{"dt":123}]}
+--- PASS: TestInvalidProviderResponses (0.00s)
+    --- PASS: TestInvalidProviderResponses/not_JSON (0.00s)
+    --- PASS: TestInvalidProviderResponses/{} (0.00s)
+    --- PASS: TestInvalidProviderResponses/{"list":[]} (0.00s)
+    --- PASS: TestInvalidProviderResponses/{"list":[{"dt":123}]} (0.00s)
+=== RUN   TestCancelledRateLimitWait
+--- PASS: TestCancelledRateLimitWait (0.00s)
+=== RUN   TestWebRequestPendingThenCompletedWithoutResubmission
+--- PASS: TestWebRequestPendingThenCompletedWithoutResubmission (0.00s)
+=== RUN   TestWebValidationMissingKeyAndCrossOrigin
+--- PASS: TestWebValidationMissingKeyAndCrossOrigin (0.00s)
+=== RUN   TestWebAssetsAboutAndMissingResults
+--- PASS: TestWebAssetsAboutAndMissingResults (0.00s)
+=== RUN   TestDashboardLinksUsePublicHostAndConfiguredSubpath
+--- PASS: TestDashboardLinksUsePublicHostAndConfiguredSubpath (0.00s)
+=== RUN   TestWebRouteMetricsDoNotLabelRequestIDs
+--- PASS: TestWebRouteMetricsDoNotLabelRequestIDs (0.00s)
+PASS
+ok  	cloudProject02/internal/app	0.442s

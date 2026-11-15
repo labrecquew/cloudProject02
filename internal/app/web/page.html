@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{if .About}}About{{else if .Summary}}{{.Summary.Location}} forecast{{else}}Forecast{{end}} · Cloud Computing Project 2</title>
+<title>{{if .Summary}}{{.Summary.Location}} forecast{{else}}Forecast{{end}} · Cloud Computing Project 2</title>
 {{if .Pending}}<meta http-equiv="refresh" content="2">{{end}}
 <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -15,23 +15,6 @@
 </div>
 </header>
 <main id="main" class="page">
-{{if .About}}
-<section class="hero">
-<h1>About this project</h1>
-<p>Weather forecasts and temperature and wind alerts for US ZIP codes.</p>
-</section>
-<article class="panel about">
-<h2>Project reference</h2>
-<p>R. O. Topaloglu, “Project2 for Cloud Computing Fall 2026,” Marist University, course assignment, 2026, pp. 1–2.</p>
-<h2>Weather data</h2>
-<p>Forecast data comes from <a href="https://openweathermap.org/api/forecast5">OpenWeather’s 5 Day / 3 Hour Forecast API</a>. Choose 1–5 days. Available forecasts are spaced three hours apart; each result shows its dates and times.</p>
-<h2>Alerts and units</h2>
-<p>Alerts flag high temperature, low temperature, and high wind using the limits shown on the forecast page. Temperature is shown in Fahrenheit and wind in miles per hour.</p>
-<h2>Hosting</h2>
-<p>The deployment target is <a href="https://www.oracle.com/cloud/free/">Oracle Cloud Free Tier</a>.</p>
-<a class="button" href="/">Request a forecast</a>
-</article>
-{{else}}
 <section class="hero">
 <h1>Weather forecast</h1>
 <p>Enter a US ZIP code and select 1–5 forecast days.</p>
@@ -40,7 +23,6 @@
 <aside>
 <section class="panel request-panel">
 <h2>Request a forecast</h2>
-
 <form action="/request" method="post">
 <label for="zip">US ZIP code</label>
 <input type="text" id="zip" name="zip" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}" minlength="5" maxlength="5" required placeholder="e.g. 12601" value="{{.ZIP}}" aria-describedby="zip-help">
@@ -64,7 +46,6 @@
 <span>High wind</span>
 <strong>{{number .WindThreshold}} mph and up</strong>
 </div>
-
 </div>
 </section>
 </aside>
@@ -89,7 +70,7 @@
 </span>
 </div>
 <p class="field-help">This page updates automatically.</p>
-<a href="/requests/{{.Job.ID}}">Refresh status</a>
+<a href="/requests/{{.RequestID}}">Refresh status</a>
 </section>
 {{else if .Summary}}
 <section class="result-heading">
@@ -101,29 +82,25 @@
 </div>
 </section>
 <div class="summary-grid">
-<section class="panel summary-card warm">
+<section class="panel summary-card">
 <span>Forecast high</span>
 <strong>{{number .Summary.High}}<small>°F</small>
 </strong>
-
 </section>
-<section class="panel summary-card cool">
+<section class="panel summary-card">
 <span>Forecast low</span>
 <strong>{{number .Summary.Low}}<small>°F</small>
 </strong>
-
 </section>
-<section class="panel summary-card wind">
+<section class="panel summary-card">
 <span>Peak wind</span>
 <strong>{{number .Summary.Wind}}<small>mph</small>
 </strong>
-
 </section>
 </div>
 {{if .Alerts}}<section class="panel alerts-panel">
 <div class="section-title">
 <h2>{{len .Alerts}} {{if eq (len .Alerts) 1}}alert{{else}}alerts{{end}}</h2>
-
 </div>
 <p class="muted">Alerts are listed for each forecast time.</p>
 <details>
@@ -187,7 +164,7 @@
 </section>
 {{end}}
 </div>
-</div>{{end}}
+</div>
 </main>
 </body>
 </html>{{end}}

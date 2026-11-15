@@ -1,0 +1,125 @@
+{
+  "timezone": "America/New_York",
+  "panels": [
+    {
+      "zip": "02108",
+      "days": 1,
+      "panel": "Temperature forecast",
+      "queries": [
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"daddfd25fc59e558b21183fb8ba5afc9\",job=\"weather-monitor\",zip=\"02108\"} * 1000",
+          "points": 8
+        },
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_temperature_celsius\",request_id=\"daddfd25fc59e558b21183fb8ba5afc9\",job=\"weather-monitor\",zip=\"02108\"} * 9 / 5 + 32",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "zip": "02108",
+      "days": 1,
+      "panel": "Wind forecast",
+      "queries": [
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"daddfd25fc59e558b21183fb8ba5afc9\",job=\"weather-monitor\",zip=\"02108\"} * 1000",
+          "points": 8
+        },
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_wind_meters_per_second\",request_id=\"daddfd25fc59e558b21183fb8ba5afc9\",job=\"weather-monitor\",zip=\"02108\"} * 2.2369362920544",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "zip": "60601",
+      "days": 2,
+      "panel": "Temperature forecast",
+      "queries": [
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"c184c47868c06159b8452308c13c92ab\",job=\"weather-monitor\",zip=\"60601\"} * 1000",
+          "points": 16
+        },
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_temperature_celsius\",request_id=\"c184c47868c06159b8452308c13c92ab\",job=\"weather-monitor\",zip=\"60601\"} * 9 / 5 + 32",
+          "points": 16
+        }
+      ]
+    },
+    {
+      "zip": "60601",
+      "days": 2,
+      "panel": "Wind forecast",
+      "queries": [
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"c184c47868c06159b8452308c13c92ab\",job=\"weather-monitor\",zip=\"60601\"} * 1000",
+          "points": 16
+        },
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_wind_meters_per_second\",request_id=\"c184c47868c06159b8452308c13c92ab\",job=\"weather-monitor\",zip=\"60601\"} * 2.2369362920544",
+          "points": 16
+        }
+      ]
+    },
+    {
+      "zip": "10001",
+      "days": 3,
+      "panel": "Temperature forecast",
+      "queries": [
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"7d726e9f4228dfde73ff1e87b8641084\",job=\"weather-monitor\",zip=\"10001\"} * 1000",
+          "points": 24
+        },
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_temperature_celsius\",request_id=\"7d726e9f4228dfde73ff1e87b8641084\",job=\"weather-monitor\",zip=\"10001\"} * 9 / 5 + 32",
+          "points": 24
+        }
+      ]
+    },
+    {
+      "zip": "10001",
+      "days": 3,
+      "panel": "Wind forecast",
+      "queries": [
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"7d726e9f4228dfde73ff1e87b8641084\",job=\"weather-monitor\",zip=\"10001\"} * 1000",
+          "points": 24
+        },
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_wind_meters_per_second\",request_id=\"7d726e9f4228dfde73ff1e87b8641084\",job=\"weather-monitor\",zip=\"10001\"} * 2.2369362920544",
+          "points": 24
+        }
+      ]
+    },
+    {
+      "zip": "12601",
+      "days": 5,
+      "panel": "Temperature forecast",
+      "queries": [
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"c29681e96a5597582075c3748913ceaf\",job=\"weather-monitor\",zip=\"12601\"} * 1000",
+          "points": 40
+        },
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_temperature_celsius\",request_id=\"c29681e96a5597582075c3748913ceaf\",job=\"weather-monitor\",zip=\"12601\"} * 9 / 5 + 32",
+          "points": 40
+        }
+      ]
+    },
+    {
+      "zip": "12601",
+      "days": 5,
+      "panel": "Wind forecast",
+      "queries": [
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_valid_time_seconds\",request_id=\"c29681e96a5597582075c3748913ceaf\",job=\"weather-monitor\",zip=\"12601\"} * 1000",
+          "points": 40
+        },
+        {
+          "expression": "{__name__=~\"weather_(request_)?forecast_wind_meters_per_second\",request_id=\"c29681e96a5597582075c3748913ceaf\",job=\"weather-monitor\",zip=\"12601\"} * 2.2369362920544",
+          "points": 40
+        }
+      ]
+    }
+  ]
+}

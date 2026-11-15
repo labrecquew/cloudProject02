@@ -5,8 +5,7 @@
   --brand:#c91235;
   --line:#dedee3;
   --paper:#fff;
-  --bg:#f5f5f7;
-  --warm:#fff4df
+  --bg:#f5f5f7
 }
 * {
   box-sizing:border-box
@@ -105,10 +104,6 @@ h3 {
 }
 .request-panel {
   padding:26px
-}
-.request-panel>p {
-  font-size:13px;
-  margin:10px 0 24px
 }
 .request-panel form {
   display:flex;
@@ -212,7 +207,6 @@ form label[for=days] {
   justify-content:center
 }
 
-
 .welcome h2 {
   font-size:28px;
   letter-spacing:-.8px
@@ -223,11 +217,6 @@ form label[for=days] {
   font-size:14px;
   margin:14px auto 0
 }
-
-
-
-
-
 
 .message {
   display:flex;
@@ -330,9 +319,6 @@ form label[for=days] {
   margin-left:5px;
   font-weight:400
 }
-
-
-
 
 .section-title {
   display:flex;
@@ -490,24 +476,6 @@ summary {
   100% {
     transform:translateX(390%)
   }
-}
-.about {
-  max-width:850px;
-  padding:34px
-}
-.about h2 {
-  font-size:19px;
-  margin:24px 0 10px
-}
-.about h2:first-child {
-  margin-top:0
-}
-.about p {
-  font-size:14px;
-  color:var(--muted)
-}
-.about .button {
-  margin-top:28px
 }
 .sr-only,.skip-link {
   position:absolute;

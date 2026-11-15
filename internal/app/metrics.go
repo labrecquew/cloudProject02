@@ -249,8 +249,6 @@ func (m *appMetrics) instrument(next http.Handler) http.Handler {
 			route = "web_submit"
 		case r.Pattern == "GET /requests/{id}":
 			route = "web_result"
-		case r.URL.Path == "/about":
-			route = "about"
 		case r.URL.Path == "/static/style.css":
 			route = "static"
 		case r.URL.Path == "/healthz":

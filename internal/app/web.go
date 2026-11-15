@@ -63,15 +63,14 @@ type displaySummary struct {
 	High, Low, Wind float64
 	Location        string
 	Start, End      time.Time
-	Count           int
 }
 type webPage struct {
 	ZIP                                        string
 	Days                                       int
 	DayOptions                                 []int
-	Configured, Pending, About                 bool
+	Configured, Pending                        bool
 	Error, Status, Stage                       string
-	Job                                        *Job
+	RequestID                                  string
 	Summary                                    *displaySummary
 	ForecastDays                               []displayDay
 	Alerts                                     []displayAlert
@@ -83,7 +82,7 @@ type webPage struct {
 func fahrenheit(c float64) float64     { return c*9/5 + 32 }
 func milesPerHour(mps float64) float64 { return mps * 2.2369362920544 }
 
-func dashboardLink(r *http.Request, dashboard, zip string) string {
+func forecastPanelURL(r *http.Request, panelID, zip, requestID string) string {
 	base, err := url.Parse(strings.TrimSpace(os.Getenv("GRAFANA_PUBLIC_URL")))
 	if err != nil || base.Host == "" || (base.Scheme != "http" && base.Scheme != "https") || base.User != nil {
 		host := r.Host
@@ -97,26 +96,17 @@ func dashboardLink(r *http.Request, dashboard, zip string) string {
 		}
 		base = &url.URL{Scheme: scheme, Host: net.JoinHostPort(host, "3000")}
 	}
-	base.Path = strings.TrimRight(base.Path, "/") + "/d/" + dashboard + "/" + dashboard
-	base.RawQuery, base.Fragment = "", ""
-	if zip != "" {
-		query := url.Values{"var-zip": {zip}}
-		base.RawQuery = query.Encode()
-	}
+	base.Path = strings.TrimRight(base.Path, "/") + "/d-solo/weather-forecasts/weather-forecasts"
+	base.RawPath, base.Fragment = "", ""
+	base.RawQuery = url.Values{
+		"panelId":              {panelID},
+		"var-zip":              {zip},
+		"var-forecast_request": {requestID},
+		"theme":                {"light"},
+		"timezone":             {forecastTimeZoneName},
+		"refresh":              {"10s"},
+	}.Encode()
 	return base.String()
-}
-
-func forecastPanelURL(dashboard *url.URL, panelID, requestID string) string {
-	panel := *dashboard
-	panel.Path = strings.TrimSuffix(panel.Path, "/d/weather-forecasts/weather-forecasts") + "/d-solo/weather-forecasts/weather-forecasts"
-	query := panel.Query()
-	query.Set("panelId", panelID)
-	query.Set("var-forecast_request", requestID)
-	query.Set("theme", "light")
-	query.Set("timezone", forecastTimeZoneName)
-	query.Set("refresh", "10s")
-	panel.RawQuery = query.Encode()
-	return panel.String()
 }
 
 func newWebPage(jobs *jobService, configured bool) webPage {
@@ -149,11 +139,6 @@ func renderPage(w http.ResponseWriter, status int, page webPage) {
 
 func registerWeb(mux *http.ServeMux, jobs *jobService, configured bool) {
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) { renderPage(w, 200, newWebPage(jobs, configured)) })
-	mux.HandleFunc("GET /about", func(w http.ResponseWriter, r *http.Request) {
-		page := newWebPage(jobs, configured)
-		page.About = true
-		renderPage(w, 200, page)
-	})
 	mux.HandleFunc("GET /static/style.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-cache")
@@ -216,7 +201,7 @@ func registerWeb(mux *http.ServeMux, jobs *jobService, configured bool) {
 			renderPage(w, 404, page)
 			return
 		}
-		page.Job = &job
+		page.RequestID = job.ID
 		page.ZIP = job.Request.ZIP
 		page.Days = job.Request.Days
 
@@ -243,7 +228,7 @@ func registerWeb(mux *http.ServeMux, jobs *jobService, configured bool) {
 				return
 			}
 			f := job.Forecast
-			summary := displaySummary{Location: f.Location, Count: len(f.Points), Start: f.Points[0].Time, End: f.Points[len(f.Points)-1].Time, High: fahrenheit(f.Points[0].TemperatureCelsius), Low: fahrenheit(f.Points[0].TemperatureCelsius)}
+			summary := displaySummary{Location: f.Location, Start: f.Points[0].Time, End: f.Points[len(f.Points)-1].Time, High: fahrenheit(f.Points[0].TemperatureCelsius), Low: fahrenheit(f.Points[0].TemperatureCelsius)}
 			labels := map[time.Time][]string{}
 			for _, alert := range job.Alerts {
 				item := displayAlert{Time: alert.Time, Value: fahrenheit(alert.Value), Threshold: fahrenheit(alert.Threshold), Unit: "°F", Comparison: "at or above"}
@@ -277,10 +262,8 @@ func registerWeb(mux *http.ServeMux, jobs *jobService, configured bool) {
 				day.Points = append(day.Points, displayPoint{point.Time, temp, wind, labels[point.Time]})
 			}
 			page.Summary = &summary
-			if dashboard, err := url.Parse(dashboardLink(r, "weather-forecasts", page.ZIP)); err == nil {
-				page.TemperatureChart = forecastPanelURL(dashboard, "8", job.ID)
-				page.WindChart = forecastPanelURL(dashboard, "9", job.ID)
-			}
+			page.TemperatureChart = forecastPanelURL(r, "8", page.ZIP, job.ID)
+			page.WindChart = forecastPanelURL(r, "9", page.ZIP, job.ID)
 		}
 		renderPage(w, 200, page)
 	})
